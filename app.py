@@ -1,7 +1,7 @@
 import json
-from flask import Flask
+from flask import Flask, request
 
-with open('tests/courses_data.json', 'r') as file:
+with open("tests/courses_data.json", "r") as file:
     courses_data = json.load(file)
 
 app = Flask(__name__)
@@ -10,9 +10,14 @@ app = Flask(__name__)
 def index():
     return "hello, World!"
 
-
-@app.route("/courses")
+@app.get("/courses")
 def courses():
+    return courses_data
+
+@app.post("/courses")
+def update_courses():
+    new_course = request.json
+    courses_data["courses"].append(new_course)
     return courses_data
 
 

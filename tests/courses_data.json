@@ -1,8 +1,12 @@
- {
-  "course1": {
-  "name":"Women in Tech", "location": "Manchester"
-  },
-  "course2": {
-  "name":"Cyber Security Track Day", "location": "Manchester"
-  }
-   }
+{
+  "courses": [
+    {
+      "name": "Women in Tech",
+      "location": "Manchester"
+    },
+    {
+      "name": "Cyber Security Track Day",
+      "location": "Manchester"
+    }
+  ]
+}
