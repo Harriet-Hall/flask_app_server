@@ -33,10 +33,15 @@ jobs:
           IP_ADDRESS: ${{ secrets.EC2_HOST }}
           USER_NAME: ${{ secrets.EC2_USER }}
         run: |
-         #Ssh into the EC2 instance 
+         # Ssh into the EC2 instance 
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i private_key ${USER_NAME}@${IP_ADDRESS} << 'EOF'
           
+          # Install git 
+          # Install necessary tools, including Git
+          sudo yum update -y
+          sudo yum install -y git
+
           # Check if the repo directory exists, if not clone it
           if [ ! -d "/home/ec2-user/flask_app_server" ]; then
             git clone https://github.com/Harriet-Hall/flask_app_server.git /home/ec2-user/flask_app_server
