@@ -52,9 +52,6 @@ jobs:
           # Navigate to the repo directory
           cd /home/ec2-user/flask_app_server
 
-          # Pull the latest code
-          git pull origin main
-
           # Set up virtual environment
           python3 -m venv venv
           source venv/bin/activate
