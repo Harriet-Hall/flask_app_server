@@ -62,7 +62,7 @@ jobs:
           
           # Install and configure NGINX
           sudo yum install -y nginx
-          sudo tee /etc/nginx/conf.d/flask_app_server.conf > /dev/null << NGINX_CONF
+          echo "
           server {
               listen 80;
               listen [::]:80;
@@ -75,14 +75,14 @@ jobs:
                   proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
                   proxy_set_header X-Forwarded-Proto \$scheme;
               }
-          }
-          NGINX_CONF
+          }" | sudo tee /etc/nginx/conf.d/test_for_assignment.conf
+          
           sudo systemctl restart nginx
           sudo systemctl enable nginx
 
           # Set up Gunicorn
           pip install gunicorn
-          sudo tee /etc/systemd/system/gunicorn.service > /dev/null << GUNICORN_CONF
+          echo "
           [Unit]
           Description=gunicorn daemon
           After=network.target
@@ -94,8 +94,8 @@ jobs:
           ExecStart=/home/ec2-user/flask_app_server/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
 
           [Install]
-          WantedBy=multi-user.target
-          GUNICORN_CONF
+          WantedBy=multi-user.target" | sudo tee /etc/systemd/system/gunicorn.service
+          
 
           # Restart and enable Gunicorn
           sudo systemctl daemon-reload
