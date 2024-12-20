@@ -20,6 +20,5 @@ def update_courses():
     courses_data["courses"].append(new_course)
     return courses_data
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
