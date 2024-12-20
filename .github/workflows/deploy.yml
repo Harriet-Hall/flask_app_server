@@ -32,6 +32,8 @@ jobs:
           PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
           IP_ADDRESS: ${{ secrets.EC2_HOST }}
           USER_NAME: ${{ secrets.EC2_USER }}
+          IP: ${{ secrets.EC2_IP}}
+
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i private_key ${USER_NAME}@${IP_ADDRESS} 'bash -s' << 'EOF'
@@ -59,11 +61,11 @@ jobs:
 
             # Install and configure NGINX
             sudo yum install -y nginx
-            echo "
+            echo '
             server {
                 listen 80;
                 listen [::]:80;
-                server_name 13.43.137.48;
+                server_name "$IP";
 
                 location / {
                     proxy_pass http://localhost:8000;
@@ -72,7 +74,7 @@ jobs:
                     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
                     proxy_set_header X-Forwarded-Proto \$scheme;
                 }
-            }" | sudo tee /etc/nginx/conf.d/flask_app_server.conf
+            }' | sudo tee /etc/nginx/conf.d/flask_app_server.conf
             
             sudo systemctl restart nginx
             sudo systemctl enable nginx
