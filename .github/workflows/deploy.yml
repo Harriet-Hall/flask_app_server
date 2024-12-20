@@ -3,7 +3,7 @@ name: Flask App
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
   build-and-deploy:
@@ -33,77 +33,72 @@ jobs:
           IP_ADDRESS: ${{ secrets.EC2_HOST }}
           USER_NAME: ${{ secrets.EC2_USER }}
         run: |
-         # Ssh into the EC2 instance 
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i private_key ${USER_NAME}@${IP_ADDRESS} << 'EOF'
-          
-          # Install git 
-          # Install necessary tools, including Git
-          sudo yum update -y
-          sudo yum install -y git
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i private_key ${USER_NAME}@${IP_ADDRESS} 'bash -s' << 'EOF'
+            # Install Git and other dependencies
+            sudo yum update -y
+            sudo yum install -y git
 
-          # Check if the repo directory exists, if not clone it
-          if [ ! -d "/home/ec2-user/flask_app_server" ]; then
-            git clone https://github.com/Harriet-Hall/flask_app_server.git /home/ec2-user/flask_app_server
-          else
-            cd /home/ec2-user/flask_app_server && git pull origin main
-          fi
+            # Clone or update the repository
+            if [ ! -d "/home/ec2-user/flask_app_server" ]; then
+              git clone https://github.com/Harriet-Hall/flask_app_server.git /home/ec2-user/flask_app_server
+            else
+              cd /home/ec2-user/flask_app_server && git pull origin main
+            fi
 
-          # Navigate to the repo directory
-          cd /home/ec2-user/flask_app_server
+            # Navigate to the repo directory
+            cd /home/ec2-user/flask_app_server
 
-          # Set up virtual environment
-          python3 -m venv venv
-          source venv/bin/activate
+            # Set up virtual environment
+            python3 -m venv venv
+            source venv/bin/activate
 
-          # Install project dependencies
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
-          # Install and configure NGINX
-          sudo yum install -y nginx
-          echo "
-          server {
-              listen 80;
-              listen [::]:80;
-              server_name 13.43.137.48;
+            # Install dependencies
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
 
-              location / {
-                  proxy_pass http://localhost:8000;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-              }
-          }" | sudo tee /etc/nginx/conf.d/flask_app_server.conf
-          
-          sudo systemctl restart nginx
-          sudo systemctl enable nginx
+            # Install and configure NGINX
+            sudo yum install -y nginx
+            echo "
+            server {
+                listen 80;
+                listen [::]:80;
+                server_name 13.43.137.48;
 
-          # Set up Gunicorn
-          pip install gunicorn
-          echo "
-          [Unit]
-          Description=gunicorn daemon
-          After=network.target
+                location / {
+                    proxy_pass http://localhost:8000;
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                }
+            }" | sudo tee /etc/nginx/conf.d/flask_app_server.conf
+            
+            sudo systemctl restart nginx
+            sudo systemctl enable nginx
 
-          [Service]
-          User=ec2-user
-          Group=nginx
-          WorkingDirectory=/home/ec2-user/flask_app_server
-          ExecStart=/home/ec2-user/flask_app_server/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+            # Set up Gunicorn
+            pip install gunicorn
+            echo "
+            [Unit]
+            Description=gunicorn daemon
+            After=network.target
 
-          [Install]
-          WantedBy=multi-user.target" | sudo tee /etc/systemd/system/gunicorn.service
-          
+            [Service]
+            User=ec2-user
+            Group=nginx
+            WorkingDirectory=/home/ec2-user/flask_app_server
+            ExecStart=/home/ec2-user/flask_app_server/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
 
-          # Restart and enable Gunicorn
-          sudo systemctl daemon-reload
-          sudo systemctl restart gunicorn
-          sudo systemctl enable gunicorn
+            [Install]
+            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/gunicorn.service
 
-          # Start services
-          sudo systemctl start nginx
-          sudo systemctl enable nginx
+            # Restart and enable Gunicorn
+            sudo systemctl daemon-reload
+            sudo systemctl restart gunicorn
+            sudo systemctl enable gunicorn
 
+            # Start and enable NGINX
+            sudo systemctl start nginx
+            sudo systemctl enable nginx
           EOF
