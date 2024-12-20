@@ -75,7 +75,7 @@ jobs:
                   proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
                   proxy_set_header X-Forwarded-Proto \$scheme;
               }
-          }" | sudo tee /etc/nginx/conf.d/test_for_assignment.conf
+          }" | sudo tee /etc/nginx/conf.d/flask_app_server.conf
           
           sudo systemctl restart nginx
           sudo systemctl enable nginx
