@@ -64,7 +64,7 @@ jobs:
             server {
                 listen 80;
                 listen [::]:80;
-                server_name 18.171.191.241;
+                server_name 35.178.157.97;
 
                 location / {
                     proxy_pass http://localhost:8000;
