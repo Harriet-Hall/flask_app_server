@@ -8,7 +8,7 @@ pip install -r requirements.txt
 
 # Run the application
 
-falsk run 
+flask run 
 
 # Navigate to courses page 
 
